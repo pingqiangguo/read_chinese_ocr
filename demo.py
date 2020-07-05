@@ -1,15 +1,19 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 import os
-import ocr
-import time
 import shutil
+import time
+from glob import glob
+
 import numpy as np
 from PIL import Image
-from glob import glob
+
+import ocr
+
 image_files = glob('./test_images/*.*')
 
-
 if __name__ == '__main__':
+
+    # 创建测试路径
     result_dir = './test_result'
     if os.path.exists(result_dir):
         shutil.rmtree(result_dir)
@@ -25,4 +29,3 @@ if __name__ == '__main__':
         print("\nRecognition Result:\n")
         for key in result:
             print(result[key][1])
-
