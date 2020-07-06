@@ -1,0 +1,34 @@
+
+*.pyc
+.idea/*
+.vscode/*
+*/__pycache__/*
+将删除 .idea/.gitignore
+将删除 .idea/inspectionProfiles/
+将删除 .idea/misc.xml
+将删除 .idea/modules.xml
+将删除 .idea/read_chinese_ocr.iml
+将删除 .idea/vcs.xml
+将删除 .vscode/
+将删除 __pycache__/ocr.cpython-36.pyc
+将删除 __pycache__/ocr.cpython-37.pyc
+将删除 ctpn/__pycache__/__init__.cpython-36.pyc
+将删除 ctpn/__pycache__/__init__.cpython-37.pyc
+将删除 ctpn/__pycache__/text_detect.cpython-36.pyc
+将删除 ctpn/__pycache__/text_detect.cpython-37.pyc
+将删除 ctpn/lib/__pycache__/__init__.cpython-36.pyc
+将删除 ctpn/lib/__pycache__/__init__.cpython-37.pyc
+将删除 ctpn/lib/fast_rcnn/__pycache__/__init__.cpython-36.pyc
+将删除 ctpn/lib/fast_rcnn/__pycache__/__init__.cpython-37.pyc
+将删除 ctpn/lib/fast_rcnn/__pycache__/bbox_transform.cpython-36.pyc
+将删除 ctpn/lib/fast_rcnn/__pycache__/config.cpython-36.pyc
+将删除 ctpn/lib/fast_rcnn/__pycache__/config.cpython-37.pyc
+将删除 ctpn/lib/fast_rcnn/__pycache__/train.cpython-36.pyc
+将删除 ctpn/lib/roi_data_layer/__pycache__/__init__.cpython-36.pyc
+将删除 ctpn/lib/roi_data_layer/__pycache__/roidb.cpython-36.pyc
+将删除 ctpn/lib/utils/__pycache__/__init__.cpython-36.pyc
+将删除 ctpn/lib/utils/__pycache__/blob.cpython-36.pyc
+将删除 ctpn/lib/utils/__pycache__/boxes_grid.cpython-36.pyc
+将删除 ctpn/lib/utils/__pycache__/timer.cpython-36.pyc
+将删除 test_result/demo1.jpg
+将删除 test_result/demo2.jpg

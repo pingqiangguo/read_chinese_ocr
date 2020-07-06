@@ -1,21 +1,27 @@
-import os
-import sys
+# -*- coding: utf-8 -*-
 import cv2
 import numpy as np
 import tensorflow as tf
-from lib.utils.timer import Timer
-from lib.fast_rcnn.config import cfg
-from lib.fast_rcnn.test import  test_ctpn
-from lib.networks.factory import get_network
-from lib.text_connector.detectors import TextDetector
-from lib.text_connector.text_connect_cfg import Config as TextLineCfg
+
+from ctpn.lib.fast_rcnn.config import cfg
+from ctpn.lib.fast_rcnn.test import test_ctpn
+from ctpn.lib.networks.factory import get_network
+from ctpn.lib.text_connector.detectors import TextDetector
+from ctpn.lib.text_connector.text_connect_cfg import Config as TextLineCfg
+from ctpn.lib.utils.timer import Timer
 
 
 def resize_im(im, scale, max_scale=None):
+    """
+    将图像按照一定比例进行缩放
+    """
     f = float(scale) / min(im.shape[0], im.shape[1])
-    if max_scale != None and f * max(im.shape[0], im.shape[1]) > max_scale:
+    if (max_scale is not None) and (f * max(im.shape[0], im.shape[1]) > max_scale):
         f = float(max_scale) / max(im.shape[0], im.shape[1])
+    print("resize_im: the scale is {}. the max scale is {}.".format(scale, max_scale))
+    print("resize_im: the magnification of the image is: {}".format(f))
     return cv2.resize(im, None, None, fx=f, fy=f, interpolation=cv2.INTER_LINEAR), f
+
 
 def load_tf_model():
     # load config file
@@ -42,13 +48,16 @@ def load_tf_model():
 
     return sess, net
 
+
 sess, net = load_tf_model()
+
 
 def ctpn(img):
     timer = Timer()
     timer.tic()
-
+    print("ctpn: the shape of the original picture is {}".format(img.shape))
     img, scale = resize_im(img, scale=TextLineCfg.SCALE, max_scale=TextLineCfg.MAX_SCALE)
+    print("ctpn: the shape of the adjusted picture is {}".format(img.shape))
     scores, boxes = test_ctpn(sess, net, img)
 
     textdetector = TextDetector()
@@ -59,6 +68,7 @@ def ctpn(img):
            '{:d} object proposals').format(timer.total_time, boxes.shape[0]))
 
     return scores, boxes, img, scale
+
 
 def draw_boxes(img, boxes, scale):
     box_id = 0
@@ -83,17 +93,20 @@ def draw_boxes(img, boxes, scale):
 
         box_id += 1
 
-    img = cv2.resize(img, None, None, fx=1.0/scale, fy=1.0/scale, interpolation=cv2.INTER_LINEAR)
+    img = cv2.resize(img, None, None, fx=1.0 / scale, fy=1.0 / scale, interpolation=cv2.INTER_LINEAR)
     return text_recs, img
+
 
 def text_detect(img):
     scores, boxes, img, scale = ctpn(img)
     text_recs, img_drawed = draw_boxes(img, boxes, scale)
     return text_recs, img_drawed, img
 
+
 if __name__ == '__main__':
     from PIL import Image
-    from lib.fast_rcnn.config import cfg_from_file
+    from ctpn.lib.fast_rcnn.config import cfg_from_file
+
     cfg_from_file('./ctpn/ctpn/text.yml')
     im = Image.open('./test_images/1.jpg')
     img = np.array(im.convert('RGB'))
