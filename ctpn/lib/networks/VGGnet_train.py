@@ -6,8 +6,7 @@ from ..fast_rcnn.config import cfg
 
 
 class VGGnet_train(Network):
-    def __init__(self, inputs, trainable=True):
-        super().__init__(inputs, trainable)
+    def __init__(self, trainable=True):
         self.inputs = []
 
         # ++++++++++++++++++ The placeholder of input data +++++++++++++++++++++++++

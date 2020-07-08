@@ -44,19 +44,21 @@ def _get_blobs(im, rois):
 
 
 def test_ctpn(sess, net, im, boxes=None):
+    """
+
+    :param sess: tensorflow session
+    """
     blobs, im_scales = _get_blobs(im, boxes)
     # Because test_ctpn only tests for one image. the length of im_scales is always 1
     if cfg.TEST.HAS_RPN:
+        # The shape of im_blob is [batch size, height, width, channels]
+        # Tn test_ctpn, the batch size is always 1 and channels is always 3
         im_blob = blobs['data']
-        # im_blob.shape[1] is the height of the image.
-        # im_blob.shape[2] is the width of the image
         blobs['im_info'] = np.array([[im_blob.shape[1], im_blob.shape[2], im_scales[0]]], dtype=np.float32)
-    # forward pass
     # The mean of RPN is Region Proposal Networks.
     # The specific content can by refered to this link: https://blog.csdn.net/JNingWei/article/details/78847696
     if cfg.TEST.HAS_RPN:
-        # Test data provided to the model
-        # TODO: I need to understand this network
+        # Test data are provided to the model
         feed_dict = {
             net.data: blobs['data'],  # net.data the the placeholder of the network
             net.im_info: blobs['im_info'],

@@ -12,8 +12,9 @@ from ctpn.lib.utils.timer import Timer
 
 
 def resize_im(im, scale, max_scale=None):
-    """
-    将图像按照一定比例进行缩放
+    """Scales the image to the specified size.
+
+    :param scale:
     """
     f = float(scale) / min(im.shape[0], im.shape[1])
     if (max_scale is not None) and (f * max(im.shape[0], im.shape[1]) > max_scale):
@@ -24,6 +25,9 @@ def resize_im(im, scale, max_scale=None):
 
 
 def load_tf_model():
+    """
+    load the model of tensorflow.
+    """
     # load config file
     cfg.TEST.checkpoints_path = './ctpn/checkpoints'
 
@@ -36,30 +40,36 @@ def load_tf_model():
     net = get_network("VGGnet_test")
 
     # load model
-    print('Loading network {:s}... '.format("VGGnet_test"))
+    print('load_tf_model: Loading network {:s}... '.format("VGGnet_test"))
     saver = tf.train.Saver()
     try:
         ckpt = tf.train.get_checkpoint_state(cfg.TEST.checkpoints_path)
-        print('Restoring from {}...'.format(ckpt.model_checkpoint_path))
+        print('load_tf_model: Restoring from {}...'.format(ckpt.model_checkpoint_path))
         saver.restore(sess, ckpt.model_checkpoint_path)
-        print('done')
+        print('load_tf_model: Restoring model params done')
     except:
         raise 'Check your pretrained {:s}'.format(ckpt.model_checkpoint_path)
 
     return sess, net
 
 
+# load tensorflow CTPN model
 sess, net = load_tf_model()
 
 
 def ctpn(img):
+    """ Detection text in images using ctpn models
+
+    :param img: RGB image
+    """
     timer = Timer()
     timer.tic()
     print("ctpn: the shape of the original picture is {}".format(img.shape))
     img, scale = resize_im(img, scale=TextLineCfg.SCALE, max_scale=TextLineCfg.MAX_SCALE)
     print("ctpn: the shape of the adjusted picture is {}".format(img.shape))
     scores, boxes = test_ctpn(sess, net, img)
-
+    print("ctpn: The shape of scores is {}".format(scores.shape))
+    print("ctpn: The shape of boxes is {}".format(boxes.shape))
     textdetector = TextDetector()
     boxes = textdetector.detect(boxes, scores[:, np.newaxis], img.shape[:2])
     timer.toc()

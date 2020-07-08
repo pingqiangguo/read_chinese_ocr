@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import print_function
 
 import glob
@@ -19,6 +20,14 @@ from lib.text_connector.text_connect_cfg import Config as TextLineCfg
 
 
 def resize_im(im, scale, max_scale=None):
+    """
+    The image is scaled according to a certain proportion
+
+    :param im: Original image
+    :param scale: Size of image in vertical
+    :param max_scale: Maximum image size after scaling
+    """
+    # f is image scaling
     f = float(scale) / min(im.shape[0], im.shape[1])
     if max_scale != None and f * max(im.shape[0], im.shape[1]) > max_scale:
         f = float(max_scale) / max(im.shape[0], im.shape[1])
@@ -54,13 +63,12 @@ def draw_boxes(img, image_name, boxes, scale):
 
 def ctpn(sess, net, image_name):
     timer = Timer()
-    timer.tic()
-
+    timer.tic()  # Record the start time of program execution
     img = cv2.imread(image_name)
     img, scale = resize_im(img, scale=TextLineCfg.SCALE, max_scale=TextLineCfg.MAX_SCALE)
     scores, boxes = test_ctpn(sess, net, img)
 
-    textdetector = TextDetector()
+    textdetector = TextDetector()  # Record the end of program execution
     boxes = textdetector.detect(boxes, scores[:, np.newaxis], img.shape[:2])
     draw_boxes(img, image_name, boxes, scale)
     timer.toc()

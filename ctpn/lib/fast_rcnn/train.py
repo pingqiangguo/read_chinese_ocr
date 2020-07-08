@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import print_function
 
 import os
@@ -90,8 +91,7 @@ class SolverWrapper(object):
         tf.summary.scalar('total_loss', total_loss)
         summary_op = tf.summary.merge_all()
 
-        log_image, log_image_data, log_image_name = \
-            self.build_image_summary()
+        log_image, log_image_data, log_image_name = self.build_image_summary()
 
         # optimizer
         lr = tf.Variable(cfg.TRAIN.LEARNING_RATE, trainable=False)
@@ -208,7 +208,7 @@ def get_data_layer(roidb, num_classes):
         if cfg.IS_MULTISCALE:
             # obsolete
             # layer = GtDataLayer(roidb)
-            raise "Calling caffe modules..."
+            raise Exception("Calling caffe modules...")
         else:
             layer = RoIDataLayer(roidb, num_classes)
     else:
@@ -219,7 +219,6 @@ def get_data_layer(roidb, num_classes):
 
 def train_net(network, imdb, roidb, output_dir, log_dir, pretrained_model=None, max_iters=40000, restore=False):
     """Train a Fast R-CNN network."""
-
     config = tf.ConfigProto(allow_soft_placement=True)
     config.gpu_options.allocator_type = 'BFC'
     config.gpu_options.per_process_gpu_memory_fraction = 0.75

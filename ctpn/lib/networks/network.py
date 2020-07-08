@@ -13,6 +13,10 @@ DEFAULT_PADDING = 'SAME'
 
 def layer(op):
     def layer_decorated(self, *args, **kwargs):
+        """ provide the parameter of inputs to op function and add current layer to Network.layers
+
+        :param self: Network class
+        """
         # Automatically set a name if not provided.
         name = kwargs.setdefault('name', self.get_unique_name(op.__name__))
         # Figure out the layer inputs.
@@ -36,7 +40,7 @@ def layer(op):
 
 class Network(object):
     def __init__(self, inputs, trainable=True):
-        self.inputs = []
+        self.inputs = []  # inputs layer
         self.layers = dict(inputs)
         self.trainable = trainable
         self.setup()
@@ -60,13 +64,16 @@ class Network(object):
                             raise
 
     def feed(self, *args):
+        """ get Network layer by layer name
+
+        """
+        # args can be str and layers
         assert len(args) != 0
         self.inputs = []
         for layer in args:
             if isinstance(layer, str):
                 try:
                     layer = self.layers[layer]
-                    print(layer)
                 except KeyError:
                     print(list(self.layers.keys()))
                     raise KeyError('Unknown layer name fed: %s' % layer)
@@ -86,6 +93,14 @@ class Network(object):
         return '%s_%d' % (prefix, id)
 
     def make_var(self, name, shape, initializer=None, trainable=True, regularizer=None):
+        """create a tensorflow variable
+
+        :param name: the name of tensorflow variable
+        :param shape:
+        :param initializer: initialize method. if it's None. It will not be initialized. default is None
+        :param trainable: Determines whether the value of the variable can be updated. default is False.
+        :param regularizer:
+        """
         return tf.get_variable(name, shape, initializer=initializer, trainable=trainable, regularizer=regularizer)
 
     def validate_padding(self, padding):
@@ -93,10 +108,18 @@ class Network(object):
 
     @layer
     def Bilstm(self, input, d_i, d_h, d_o, name, trainable=True):
+        """ Bidirectional LSTM network
+
+        """
         img = input
+        print("Network.Bilstm: the shape of input layer is {}".format(img.shape))
         with tf.variable_scope(name) as scope:
             shape = tf.shape(img)
+            # [N H W C] is [batch size, image height, image width, channels]
             N, H, W, C = shape[0], shape[1], shape[2], shape[3]
+            # Because the VGG network compresses the data 16 times.
+            # So one pixel now equals 16 pixels.
+            # 现在神经的网络的输入数据， 使用一行作为一个时间序列， channel作为一个单次输入数据的长度
             img = tf.reshape(img, [N * H, W, C])
             img.set_shape([None, None, d_i])
 
@@ -104,18 +127,22 @@ class Network(object):
             lstm_bw_cell = tf.contrib.rnn.LSTMCell(d_h, state_is_tuple=True)
 
             lstm_out, last_state = tf.nn.bidirectional_dynamic_rnn(lstm_fw_cell, lstm_bw_cell, img, dtype=tf.float32)
-            lstm_out = tf.concat(lstm_out, axis=-1)
+            # 对于双向神经网络， 假设输出维度是128维， 那么双向就是一个元组总共256维，在后面进行维度拼接
+            print("Network.Bilstm: lstm_out by bidirectional_dynamic_rnn is {}".format(lstm_out))
+            lstm_out = tf.concat(lstm_out, axis=-1)  # Concat by channels
 
+            # 最后一维 2 x d_h相当与对利用一个像素进行一个输出框的预测
             lstm_out = tf.reshape(lstm_out, [N * H * W, 2 * d_h])
 
             init_weights = tf.truncated_normal_initializer(stddev=0.1)
             init_biases = tf.constant_initializer(0.0)
-            weights = self.make_var('weights', [2 * d_h, d_o], init_weights, trainable, \
+            weights = self.make_var('weights', [2 * d_h, d_o], init_weights, trainable,
                                     regularizer=self.l2_regularizer(cfg.TRAIN.WEIGHT_DECAY))
             biases = self.make_var('biases', [d_o], init_biases, trainable)
             outputs = tf.matmul(lstm_out, weights) + biases
 
             outputs = tf.reshape(outputs, [N, H, W, d_o])
+            # It is equivalent to an output sequence for each pixel of the input image
             return outputs
 
     @layer
@@ -164,15 +191,32 @@ class Network(object):
     @layer
     def conv(self, input, k_h, k_w, c_o, s_h, s_w, name, biased=True, relu=True, padding=DEFAULT_PADDING,
              trainable=True):
-        """ contribution by miraclebiu, and biased option"""
+        """ convolution layer
+
+        :param input: input layer
+        :param k_h: the height of convolution kernel
+        :param k_w: the width of convolution kernel
+        :param c_o: output channel
+        :param s_h: stride h
+        :param s_w: stride w
+        :param name: convolution layer name
+        """
+        # padding is one of SAME and VALID
         self.validate_padding(padding)
+
+        # c_i is the channels of input layer
         c_i = input.get_shape()[-1]
         convolve = lambda i, k: tf.nn.conv2d(i, k, [1, s_h, s_w, 1], padding=padding)
         with tf.variable_scope(name) as scope:
 
+            # Use truncated normal distribution
+            # If the value is greater than twice the standard deviation. it will be discarded.
             init_weights = tf.truncated_normal_initializer(0.0, stddev=0.01)
+
+            # Biases is initialized to zero
             init_biases = tf.constant_initializer(0.0)
-            kernel = self.make_var('weights', [k_h, k_w, c_i, c_o], init_weights, trainable, \
+            # convolution kernel
+            kernel = self.make_var('weights', [k_h, k_w, c_i, c_o], init_weights, trainable,
                                    regularizer=self.l2_regularizer(cfg.TRAIN.WEIGHT_DECAY))
             if biased:
                 biases = self.make_var('biases', [c_o], init_biases, trainable)
@@ -211,13 +255,26 @@ class Network(object):
 
     @layer
     def proposal_layer(self, input, _feat_stride, anchor_scales, cfg_key, name):
+        """ 候选框推理层
+
+        :param input: 前一神经网络成
+            input[p] rpn_cls_prob_reshape
+            input[1] rpn_bbox_pred
+            input[2] im_info
+        :param _feat_stride:
+        :param anchor_scales:
+        :param cfg_key: "TRAIN" or "TEST"
+        :param name:
+        """
+
+        # print("Network.proposal_layer: input is {}".format(input))
         if isinstance(input[0], tuple):
             input[0] = input[0][0]
             # input[0] shape is (1, H, W, Ax2)
             # rpn_rois <- (1 x H x W x A, 5) [0, x1, y1, x2, y2]
         with tf.variable_scope(name) as scope:
             blob, bbox_delta = tf.py_func(proposal_layer_py,
-                                          [input[0], input[1], input[2], cfg_key, _feat_stride, anchor_scales], \
+                                          [input[0], input[1], input[2], cfg_key, _feat_stride, anchor_scales],
                                           [tf.float32, tf.float32])
 
             rpn_rois = tf.convert_to_tensor(tf.reshape(blob, [-1, 5]), name='rpn_rois')  # shape is (1 x H x W x A, 2)
@@ -234,10 +291,10 @@ class Network(object):
 
         with tf.variable_scope(name) as scope:
             # 'rpn_cls_score', 'gt_boxes', 'gt_ishard', 'dontcare_areas', 'im_info'
-            rpn_labels, rpn_bbox_targets, rpn_bbox_inside_weights, rpn_bbox_outside_weights = \
-                tf.py_func(anchor_target_layer_py,
-                           [input[0], input[1], input[2], input[3], input[4], _feat_stride, anchor_scales],
-                           [tf.float32, tf.float32, tf.float32, tf.float32])
+            rpn_labels, rpn_bbox_targets, rpn_bbox_inside_weights, rpn_bbox_outside_weights = tf.py_func(
+                anchor_target_layer_py,
+                [input[0], input[1], input[2], input[3], input[4], _feat_stride, anchor_scales],
+                [tf.float32, tf.float32, tf.float32, tf.float32])
 
             rpn_labels = tf.convert_to_tensor(tf.cast(rpn_labels, tf.int32),
                                               name='rpn_labels')  # shape is (1 x H x W x A, 2)
@@ -280,6 +337,9 @@ class Network(object):
 
     @layer
     def spatial_reshape_layer(self, input, d, name):
+        """ lstm_o 预测序列的长度为 10(表示有10个框) x 2(每个框预测两位数字)
+        将 10 提取到外面
+        """
         input_shape = tf.shape(input)
         # transpose: (1, H, W, A x d) -> (1, H, WxA, d)
         return tf.reshape(input, [input_shape[0], input_shape[1], -1, int(d)])

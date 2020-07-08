@@ -1,7 +1,9 @@
-import os
-import numpy as np
+# -*- coding: utf-8 -*-
 import math
+import os
+
 import cv2 as cv
+import numpy as np
 
 path = '/media/D/code/OCR/text-detection-ctpn/data/mlt_english+chinese/image'
 gt_path = '/media/D/code/OCR/text-detection-ctpn/data/mlt_english+chinese/label'
@@ -10,7 +12,7 @@ if not os.path.exists(out_path):
     os.makedirs(out_path)
 files = os.listdir(path)
 files.sort()
-#files=files[:100]
+# files=files[:100]
 for file in files:
     _, basename = os.path.split(file)
     if basename.lower().split('.')[-1] not in ['jpg', 'png']:

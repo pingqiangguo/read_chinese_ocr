@@ -168,7 +168,7 @@ __C.TEST.SVM = False
 __C.TEST.BBOX_REG = True
 
 # Propose boxes
-__C.TEST.HAS_RPN = True
+__C.TEST.HAS_RPN = True  # 是否使用选框提议网络
 
 # Test using these proposals
 __C.TEST.PROPOSAL_METHOD = 'selective_search'

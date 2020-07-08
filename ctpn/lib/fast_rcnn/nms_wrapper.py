@@ -1,10 +1,12 @@
-import numpy as np
+# -*- coding: utf-8 -*-
 from .config import cfg
 from ..utils.cython_nms import nms as cython_nms
+
 try:
-    from lib.utils.gpu_nms import gpu_nms
+    from ctpn.lib.utils.gpu_nms import gpu_nms
 except:
     pass
+
 
 def nms(dets, thresh):
     if dets.shape[0] == 0:

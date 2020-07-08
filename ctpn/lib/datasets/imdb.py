@@ -1,11 +1,13 @@
+# -*- coding: utf-8 -*-
 import os
 import os.path as osp
-import PIL
+
 import numpy as np
 import scipy.sparse
+from PIL import Image
+from ctpn.lib.utils.bbox import bbox_overlaps
 
-from ..utils.bbox import bbox_overlaps
-from ..fast_rcnn.config import cfg
+from ctpn.lib.fast_rcnn.config import cfg
 
 
 class imdb(object):
@@ -71,7 +73,7 @@ class imdb(object):
 
     @property
     def num_images(self):
-      return len(self.image_index)
+        return len(self.image_index)
 
     def image_path_at(self, i):
         raise NotImplementedError
@@ -80,8 +82,7 @@ class imdb(object):
         raise NotImplementedError
 
     def _get_widths(self):
-      return [PIL.Image.open(self.image_path_at(i)).size[0]
-              for i in range(self.num_images)]
+        return [Image.open(self.image_path_at(i)).size[0] for i in range(self.num_images)]
 
     def append_flipped_images(self):
         num_images = self.num_images
@@ -93,13 +94,13 @@ class imdb(object):
             boxes[:, 0] = widths[i] - oldx2 - 1
             boxes[:, 2] = widths[i] - oldx1 - 1
             for b in range(len(boxes)):
-                if boxes[b][2]< boxes[b][0]:
+                if boxes[b][2] < boxes[b][0]:
                     boxes[b][0] = 0
             assert (boxes[:, 2] >= boxes[:, 0]).all()
-            entry = {'boxes' : boxes,
-                     'gt_overlaps' : self.roidb[i]['gt_overlaps'],
-                     'gt_classes' : self.roidb[i]['gt_classes'],
-                     'flipped' : True}
+            entry = {'boxes': boxes,
+                     'gt_overlaps': self.roidb[i]['gt_overlaps'],
+                     'gt_classes': self.roidb[i]['gt_classes'],
+                     'flipped': True}
 
             if 'gt_ishard' in self.roidb[i] and 'dontcare_areas' in self.roidb[i]:
                 entry['gt_ishard'] = self.roidb[i]['gt_ishard'].copy()
@@ -114,10 +115,8 @@ class imdb(object):
 
         self._image_index = self._image_index * 2
 
-
     def create_roidb_from_box_list(self, box_list, gt_roidb):
-        assert len(box_list) == self.num_images, \
-                'Number of boxes must match number of ground-truth images'
+        assert len(box_list) == self.num_images, 'Number of boxes must match number of ground-truth images'
         roidb = []
         for i in range(self.num_images):
             boxes = box_list[i]
@@ -136,11 +135,11 @@ class imdb(object):
 
             overlaps = scipy.sparse.csr_matrix(overlaps)
             roidb.append({
-                'boxes' : boxes,
-                'gt_classes' : np.zeros((num_boxes,), dtype=np.int32),
-                'gt_overlaps' : overlaps,
-                'flipped' : False,
-                'seg_areas' : np.zeros((num_boxes,), dtype=np.float32),
+                'boxes': boxes,
+                'gt_classes': np.zeros((num_boxes,), dtype=np.int32),
+                'gt_overlaps': overlaps,
+                'flipped': False,
+                'seg_areas': np.zeros((num_boxes,), dtype=np.float32),
             })
         return roidb
 
@@ -156,4 +155,3 @@ class imdb(object):
             a[i]['seg_areas'] = np.hstack((a[i]['seg_areas'],
                                            b[i]['seg_areas']))
         return a
-

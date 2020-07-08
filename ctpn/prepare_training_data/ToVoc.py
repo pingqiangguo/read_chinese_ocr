@@ -1,9 +1,12 @@
-from xml.dom.minidom import Document
-import cv2
-import os
+# -*- coding: utf-8 -*-
 import glob
+import os
 import shutil
+
+import cv2
 import numpy as np
+from xml.dom.minidom import Document
+
 
 def generate_xml(name, lines, img_size, class_sets, doncateothers=True):
     doc = Document()
@@ -148,7 +151,6 @@ if __name__ == '__main__':
             for cls in class_sets:
                 if cls not in cls_in_image:
                     fs[class_sets_dict[cls]].writelines(stem + ' -1\n')
-
 
         (f.close() for f in fs)
         ftrain.close()

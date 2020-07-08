@@ -1,15 +1,16 @@
+# -*- coding: utf-8 -*-
+import os.path
 import pprint
 import sys
-import os.path
 
 sys.path.append(os.getcwd())
 this_dir = os.path.dirname(__file__)
 
-from lib.fast_rcnn.train import get_training_roidb, train_net
-from lib.fast_rcnn.config import cfg_from_file, get_output_dir, get_log_dir
-from lib.datasets.factory import get_imdb
-from lib.networks.factory import get_network
-from lib.fast_rcnn.config import cfg
+from ctpn.lib.fast_rcnn.train import get_training_roidb, train_net
+from ctpn.lib.fast_rcnn.config import cfg_from_file, get_output_dir, get_log_dir
+from ctpn.lib.datasets.factory import get_imdb
+from ctpn.lib.networks.factory import get_network
+from ctpn.lib.fast_rcnn.config import cfg
 
 if __name__ == '__main__':
     cfg_from_file('ctpn/text.yml')

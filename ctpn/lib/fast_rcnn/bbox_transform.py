@@ -1,4 +1,6 @@
+# -*- coding: utf-8 -*-
 import numpy as np
+
 
 def bbox_transform(ex_rois, gt_rois):
     """
@@ -23,9 +25,9 @@ def bbox_transform(ex_rois, gt_rois):
 
     # warnings.catch_warnings()
     # warnings.filterwarnings('error')
-    targets_dx = (gt_ctr_x - ex_ctr_x) / ex_widths
+    targets_dx = (gt_ctr_x - ex_ctr_x) / ex_widths  # 这里的数值可以用来表示预期模型计算出的标记框信息
     targets_dy = (gt_ctr_y - ex_ctr_y) / ex_heights
-    targets_dw = np.log(gt_widths / ex_widths)
+    targets_dw = np.log(gt_widths / ex_widths)  # 使用log的原因是为了把两个差别拉大
     targets_dh = np.log(gt_heights / ex_heights)
 
     targets = np.vstack(
@@ -33,21 +35,28 @@ def bbox_transform(ex_rois, gt_rois):
 
     return targets
 
-def bbox_transform_inv(boxes, deltas):
 
+def bbox_transform_inv(boxes, deltas):
+    """
+    利用deltas 调整 bbox
+    """
+    print("bbox_transform_inv: The shape of boxes is {}. The shape of deltas is {}.".format(boxes.shape, deltas.shape))
     boxes = boxes.astype(deltas.dtype, copy=False)
 
     widths = boxes[:, 2] - boxes[:, 0] + 1.0
     heights = boxes[:, 3] - boxes[:, 1] + 1.0
-    ctr_x = boxes[:, 0] + 0.5 * widths
-    ctr_y = boxes[:, 1] + 0.5 * heights
+    ctr_x = boxes[:, 0] + 0.5 * widths  # 原始框x中心点
+    ctr_y = boxes[:, 1] + 0.5 * heights  # 原始框y中心点
 
     dx = deltas[:, 0::4]
     dy = deltas[:, 1::4]
     dw = deltas[:, 2::4]
     dh = deltas[:, 3::4]
+    # print("bbox_transform_inv: : The minimum and maximum values of dy are [{},{}]".format(np.min(dy), np.max(dy)))
+    # print("bbox_transform_inv: : The minimum and maximum values of dh are [{},{}]".format(np.min(dh), np.max(dh)))
 
     pred_ctr_x = ctr_x[:, np.newaxis]
+    # heights的范围
     pred_ctr_y = dy * heights[:, np.newaxis] + ctr_y[:, np.newaxis]
     pred_w = widths[:, np.newaxis]
     pred_h = np.exp(dh) * heights[:, np.newaxis]
@@ -64,8 +73,10 @@ def bbox_transform_inv(boxes, deltas):
 
     return pred_boxes
 
+
 def clip_boxes(boxes, im_shape):
     """
+    预测框可以超过图像边界，对这个框进行截取
     Clip boxes to image boundaries.
     """
 
