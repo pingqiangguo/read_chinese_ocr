@@ -35,23 +35,23 @@ class TextDetector:
         # 对proposal做nms
         keep_inds = nms(np.hstack((text_proposals, scores)), TextLineCfg.TEXT_PROPOSALS_NMS_THRESH)
         text_proposals, scores = text_proposals[keep_inds], scores[keep_inds]
-
-        # ++++++++++++++ draw rect to black image ++++++++++++++++++++++
-        # black_img = np.zeros(size, dtype=np.uint8)
-        # for x1, y1, x2, y2 in text_proposals:
-        #     xmin = int(min(x1, x2))
-        #     xmax = int(max(x1, x2))
-        #     ymin = int(min(y1, y2))
-        #     ymax = int(max(y1, y2))
-        #     cv2.rectangle(black_img, (xmin, ymin), (xmax, ymax), 255)
-        # cv2.imshow("default", black_img)
-        # cv2.waitKey()
-        # cv2.destroyWindow("default")
+        if False:
+            # ++++++++++++++ draw rect to black image ++++++++++++++++++++++
+            black_img = np.zeros(size, dtype=np.uint8)
+            for x1, y1, x2, y2 in text_proposals:
+                xmin = int(min(x1, x2))
+                xmax = int(max(x1, x2))
+                ymin = int(min(y1, y2))
+                ymax = int(max(y1, y2))
+                cv2.rectangle(black_img, (xmin, ymin), (xmax, ymax), 255)
+            cv2.imshow("default", black_img)
+            cv2.waitKey()
+            cv2.destroyWindow("default")
 
         # 获取检测结果
         scores = normalize(scores)  # 对得分进行归一化
         text_recs = self.text_proposal_connector.get_text_lines(text_proposals, scores, size)
-
+        # print(text_recs.shape)
         # 过滤boxes
         keep_inds = self.filter_boxes(text_recs)
         text_lines = text_recs[keep_inds]

@@ -71,7 +71,8 @@ def ctpn(img):
     print("ctpn: The shape of scores is {}".format(scores.shape))
     print("ctpn: The shape of boxes is {}".format(boxes.shape))
     textdetector = TextDetector()
-    boxes = textdetector.detect(boxes, scores[:, np.newaxis], img.shape[:2])
+    boxes = textdetector.detect(boxes, scores[:, np.newaxis], img.shape[:2])  # 每一行的框
+    print("ctpn: The shape of boxes is {}".format(boxes.shape))
     timer.toc()
     print("\n----------------------------------------------")
     print(('Detection took {:.3f}s for '

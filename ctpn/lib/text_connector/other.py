@@ -32,13 +32,14 @@ class Graph:
         """
         sub_graphs = []
         for index in range(self.graph.shape[0]):
-            # 要求水平方向连接而不是竖直方向连接
             if not self.graph[:, index].any() and self.graph[index, :].any():
                 v = index
                 sub_graphs.append([v])
                 while self.graph[v, :].any():
                     v = np.where(self.graph[v, :])[0][0]
                     sub_graphs[-1].append(v)
-        print("Graph.sub_graphs_connected:\n"
-              "\tSub_grapth is {}".format(sub_graphs))
+        if False:
+            print("Graph.sub_graphs_connected:")
+            for sub_graph in sub_graphs:
+                print("\t", sub_graph)
         return sub_graphs

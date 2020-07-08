@@ -15,13 +15,14 @@ from densenet.model import predict as keras_densenet
 
 def sort_box(box):
     """ 
-    对box进行排序
+    对box进行按高度进行排序
     """
     box = sorted(box, key=lambda x: sum([x[1], x[3], x[5], x[7]]))
     return box
 
 
 def dumpRotateImage(img, degree, pt1, pt2, pt3, pt4):
+    # 对图像进行旋转， 因为旋转后可能出现部分图像越界，所以需要对旋转后图像区域进行放大
     height, width = img.shape[:2]
     heightNew = int(width * fabs(sin(radians(degree))) + height * fabs(cos(radians(degree))))
     widthNew = int(height * fabs(sin(radians(degree))) + width * fabs(cos(radians(degree))))
@@ -57,11 +58,11 @@ def charRec(img, text_recs, adjust=False):
             pt3 = (min(rec[6] + xlength, xDim - 2), min(yDim - 2, rec[7] + ylength))
             pt4 = (rec[4], rec[5])
         else:
-            pt1 = (max(1, rec[0]), max(1, rec[1]))
-            pt2 = (rec[2], rec[3])
-            pt3 = (min(rec[6], xDim - 2), min(yDim - 2, rec[7]))
-            pt4 = (rec[4], rec[5])
-
+            pt1 = (max(1, rec[0]), max(1, rec[1]))  # 左上角
+            pt2 = (rec[2], rec[3])  # 右上角
+            pt3 = (min(rec[6], xDim - 2), min(yDim - 2, rec[7]))  # 左下角
+            pt4 = (rec[4], rec[5])  # 右下角
+        # 计算图像倾斜角度
         degree = degrees(atan2(pt2[1] - pt1[1], pt2[0] - pt1[0]))  # 图像倾斜角度
 
         partImg = dumpRotateImage(img, degree, pt1, pt2, pt3, pt4)
