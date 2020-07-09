@@ -32,10 +32,10 @@ def dumpRotateImage(img, degree, pt1, pt2, pt3, pt4):
     imgRotation = cv2.warpAffine(img, matRotation, (widthNew, heightNew), borderValue=(255, 255, 255))
     pt1 = list(pt1)
     pt3 = list(pt3)
-
     [[pt1[0]], [pt1[1]]] = np.dot(matRotation, np.array([[pt1[0]], [pt1[1]], [1]]))
     [[pt3[0]], [pt3[1]]] = np.dot(matRotation, np.array([[pt3[0]], [pt3[1]], [1]]))
     ydim, xdim = imgRotation.shape[:2]
+    # 截取文字区域区域图片
     imgOut = imgRotation[max(1, int(pt1[1])): min(ydim - 1, int(pt3[1])),
              max(1, int(pt1[0])): min(xdim - 1, int(pt3[0]))]
 
@@ -72,7 +72,7 @@ def charRec(img, text_recs, adjust=False):
 
         image = Image.fromarray(partImg).convert('L')
         text = keras_densenet(image)
-
+        # print("charRec: text is {}".format(text))
         if len(text) > 0:
             results[index] = [rec]
             results[index].append(text)  # 识别文字
